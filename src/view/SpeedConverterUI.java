@@ -2,6 +2,8 @@ package view;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -9,6 +11,7 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
+import javax.swing.SwingWorker;
 
 import net.webservicex.SpeedUnit;
 import controller.SpeedConverterController;
@@ -40,6 +43,8 @@ public class SpeedConverterUI extends JFrame {
 	
 	/** Button to start convert speed value. */
 	private JButton button;
+	
+	private Working work; 
 
 	/**
 	 * Constructor for this class.
@@ -74,13 +79,11 @@ public class SpeedConverterUI extends JFrame {
 		
 		button = new JButton("Convert!");
 		button.addActionListener(new ActionListener() {
-			double convertedValue;
-			String ans;
+			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				convertedValue = controller.convert( Double.parseDouble(input.getText()), (SpeedUnit)fromUnit.getSelectedItem(), (SpeedUnit)toUnit.getSelectedItem());
-				ans = String.format("%.2f", convertedValue);
-				output.setText(ans);
+				work = new Working(Double.parseDouble(input.getText()), (SpeedUnit)fromUnit.getSelectedItem(), (SpeedUnit)toUnit.getSelectedItem());
+				work.execute();
 			}
 
 		});
@@ -101,5 +104,39 @@ public class SpeedConverterUI extends JFrame {
 		pack();
 		output.setEditable(false);
 		setVisible(true);
+	}
+	
+	class Working extends SwingWorker<String, String>{
+		double convertedValue;
+		String ans;
+		
+		double inputSpeed;
+		SpeedUnit unit1;
+		SpeedUnit unit2;
+		
+		public Working(double speed, SpeedUnit fromUnit, SpeedUnit toUnit){
+			inputSpeed = speed;
+			unit1 = fromUnit;
+			unit2 = toUnit;
+		}
+		
+		@Override
+		protected String doInBackground() throws Exception {
+			convertedValue = controller.convert(inputSpeed, unit1, unit2);
+			return String.format("%.2f", convertedValue);
+		}
+
+		@Override
+		protected void done() {
+			try {
+				output.setText(get());
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			}
+			super.done();
+		}
+		
 	}
 }
