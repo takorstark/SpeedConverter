@@ -44,7 +44,8 @@ public class SpeedConverterUI extends JFrame {
 	/** Button to start convert speed value. */
 	private JButton button;
 	
-	private Working work; 
+	/** SwingWorker */
+	private SpeedConverterWorker work; 
 
 	/**
 	 * Constructor for this class.
@@ -82,7 +83,7 @@ public class SpeedConverterUI extends JFrame {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				work = new Working(Double.parseDouble(input.getText()), (SpeedUnit)fromUnit.getSelectedItem(), (SpeedUnit)toUnit.getSelectedItem());
+				work = new SpeedConverterWorker(Double.parseDouble(input.getText()), (SpeedUnit)fromUnit.getSelectedItem(), (SpeedUnit)toUnit.getSelectedItem());
 				work.execute();
 			}
 
@@ -106,7 +107,7 @@ public class SpeedConverterUI extends JFrame {
 		setVisible(true);
 	}
 	
-	class Working extends SwingWorker<String, String>{
+	class SpeedConverterWorker extends SwingWorker<String, String>{
 		double convertedValue;
 		String ans;
 		
@@ -114,7 +115,7 @@ public class SpeedConverterUI extends JFrame {
 		SpeedUnit unit1;
 		SpeedUnit unit2;
 		
-		public Working(double speed, SpeedUnit fromUnit, SpeedUnit toUnit){
+		public SpeedConverterWorker(double speed, SpeedUnit fromUnit, SpeedUnit toUnit){
 			inputSpeed = speed;
 			unit1 = fromUnit;
 			unit2 = toUnit;
