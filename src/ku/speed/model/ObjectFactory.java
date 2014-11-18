@@ -1,5 +1,5 @@
 
-package net.webservicex;
+package ku.speed.model;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlElementDecl;

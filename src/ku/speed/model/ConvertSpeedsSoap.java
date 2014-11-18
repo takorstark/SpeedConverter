@@ -1,5 +1,5 @@
 
-package net.webservicex;
+package ku.speed.model;
 
 import javax.jws.WebMethod;
 import javax.jws.WebParam;

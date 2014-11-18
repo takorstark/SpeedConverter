@@ -1,8 +1,7 @@
-package view;
+package ku.speed.view;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import javax.swing.BoxLayout;
@@ -10,11 +9,14 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.SwingWorker;
+import javax.swing.Timer;
+import javax.xml.ws.WebServiceException;
 
-import net.webservicex.SpeedUnit;
-import controller.SpeedConverterController;
+import ku.speed.controller.SpeedConverterController;
+import ku.speed.model.SpeedUnit;
 
 /**
  * SpeedConverter class is user interface for SpeedConverter.
@@ -44,15 +46,52 @@ public class SpeedConverterUI extends JFrame {
 	/** Button to start convert speed value. */
 	private JButton button;
 	
+	/** Label for show converting status. */
+	private JLabel status;
+	
+	/** timer for label blink. */
+	private Timer timerLB;
+	
 	/** SwingWorker */
 	private SpeedConverterWorker work; 
+	
+	/** timer for check time out. */
+	private Timer timerTO;
+	
+	/** timer for check KU login */
+	private Timer timerKU;
 
 	/**
 	 * Constructor for this class.
 	 */
 	public SpeedConverterUI(){
-		controller = new SpeedConverterController();
+		boolean builtController = false;
+		
+		while(!builtController){
+			try {
+				controller = new SpeedConverterController();
+				builtController = true;
+			} catch (WebServiceException e) {
+				String[] option = {"Exit", "Retry"};
+				int check = JOptionPane.showOptionDialog(null, 
+														"No Internet Connection!", 
+														"Retry or Exit?", 
+														JOptionPane.YES_NO_OPTION, 
+														JOptionPane.WARNING_MESSAGE, 
+														null, option, 
+														"Retry");
+				if(check==1){
+					continue;
+				} else {
+					System.exit(0);
+				}
+				
+			
+			}
+		}
+		
 		initComponents();
+		timerLB = new Timer(1000, new LbBlink(status));
 	}
 	
 	/**
@@ -78,6 +117,9 @@ public class SpeedConverterUI extends JFrame {
 		toUnit = new JComboBox(SpeedUnit.values());
 		toUnit.setBounds(113, 76, 107, 20);
 		
+		status = new JLabel("");
+		status.setBounds(103, 41, 144, 20);
+		
 		button = new JButton("Convert!");
 		button.addActionListener(new ActionListener() {
 			
@@ -85,9 +127,42 @@ public class SpeedConverterUI extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				work = new SpeedConverterWorker(Double.parseDouble(input.getText()), (SpeedUnit)fromUnit.getSelectedItem(), (SpeedUnit)toUnit.getSelectedItem());
 				work.execute();
+				status.setForeground(java.awt.Color.black);
+				status.setText("Coverting...");
+				timerLB.start();
+				
+				timerTO = new Timer(11111, new ActionListener() {
+					
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						timerTO.stop();
+						work.cancel(true);
+						JOptionPane.showMessageDialog(null, "Connection Time out!");
+						input.setText("");
+						output.setText("");
+						status.setText("");
+					}
+				});
+				
+				timerKU = new Timer(5000, new ActionListener() {
+					
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						timerKU.stop();
+						work.cancel(true);
+						JOptionPane.showMessageDialog(null, "Please Check Internet Access.");
+						output.setText("");
+						status.setText("");
+						
+					}
+				});
+				
+				timerTO.start();
+				timerKU.start();
 			}
 
 		});
+		
 		
 		add(input);
 		add(fromUnit);
@@ -95,6 +170,7 @@ public class SpeedConverterUI extends JFrame {
 		add(output);
 		add(toUnit);
 		add(button);
+		add(status);
 		
 	}
 
@@ -131,13 +207,39 @@ public class SpeedConverterUI extends JFrame {
 		protected void done() {
 			try {
 				output.setText(get());
+				timerLB.stop();
+				status.setForeground(java.awt.Color.red);
+				status.setText("Done!   ");
+				timerTO.stop();
+				timerKU.stop();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			} catch (ExecutionException e) {
+				e.printStackTrace();
+			} catch ( WebServiceException e ) {
 				e.printStackTrace();
 			}
 			super.done();
 		}
 		
 	}
+}
+
+class LbBlink implements ActionListener {  
+    private javax.swing.JLabel label;
+    private java.awt.Color cor1 = java.awt.Color.black;
+    private java.awt.Color cor2 = java.awt.Color.red;
+    private int count;
+
+    public LbBlink(javax.swing.JLabel label){
+        this.label = label;
+    }
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if(count % 2 == 0)
+            label.setForeground(cor1);
+        else
+            label.setForeground(cor2);
+        count++;
+    }  
 }

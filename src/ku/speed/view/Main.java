@@ -1,7 +1,7 @@
-package view;
-import net.webservicex.ConvertSpeeds;
-import net.webservicex.ConvertSpeedsSoap;
-import net.webservicex.SpeedUnit;
+package ku.speed.view;
+import ku.speed.model.ConvertSpeeds;
+import ku.speed.model.ConvertSpeedsSoap;
+import ku.speed.model.SpeedUnit;
 
 
 /**

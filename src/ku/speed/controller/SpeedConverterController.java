@@ -1,6 +1,6 @@
-package controller;
+package ku.speed.controller;
 
-import net.webservicex.*;
+import ku.speed.model.*;
 
 /**
  * Controller class that convert value from input unit to output unit.
